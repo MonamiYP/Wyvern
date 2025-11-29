@@ -5,17 +5,17 @@ Wyvern is a lightweight C++ game engine that is currently in active development.
 ---
 
 ## Project Structure
-Wyvern/
- ├── wyvern/                # Engine source
- │   ├── include/           # Engine headers
- │   ├── lib/               # External libraries
- │   ├── src/               # Engine implementation
- │   └── CMakeLists.txt     # Engine build configuration
- ├── testapp/               # Example game/app using the engine
- │   ├── src/               # Test app implementation
- │   └── CMakeLists.txt     # Test app build configuration
- ├── CMakeLists.txt         # Build configuration
- └── README.md
+Wyvern/  
+ ├── wyvern/                # Engine source  
+ │   ├── include/           # Engine headers  
+ │   ├── lib/               # External libraries  
+ │   ├── src/               # Engine implementation  
+ │   └── CMakeLists.txt     # Engine build configuration  
+ ├── testapp/               # Example game/app using the engine  
+ │   ├── src/               # Test app implementation  
+ │   └── CMakeLists.txt     # Test app build configuration  
+ ├── CMakeLists.txt         # Build configuration  
+ └── README.md  
 
 ## Build Instructions
 ### Compiling Wyvern
