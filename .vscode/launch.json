@@ -1,0 +1,21 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug Testapp",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/bin/testapp",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}/bin",
+      "environment": [
+        {
+          "name": "DYLD_LIBRARY_PATH",
+          "value": "${workspaceFolder}/bin"
+        }
+      ],
+      "MIMode": "lldb"
+    }
+  ]
+}
