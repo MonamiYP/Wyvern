@@ -15,4 +15,5 @@ class Game {
         virtual void init() = 0;
         virtual void update(float deltaTime) = 0;
         virtual void render(float deltaTime) = 0;
+        virtual void onWindowResize(uint16_t width, uint16_t height) = 0;
 };

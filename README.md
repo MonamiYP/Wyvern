@@ -18,6 +18,11 @@ Wyvern/
  └── README.md  
 
 ## Build Instructions
+### Requirements
+- CMake (minimum 3.15)
+- C++17 compiler
+- Vulkan
+
 ### Compiling Wyvern
 From the project root:
 ```

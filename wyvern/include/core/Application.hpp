@@ -9,6 +9,8 @@
 #include "core/Clock.hpp"
 #include "events/EventTypes.hpp"
 
+#include "renderer/Renderer.hpp"
+
 class Game;
 class Window;
 
@@ -43,6 +45,8 @@ class Application {
 
     private:
         Application(Game* game);
+
+        bool onWindowResize(WindowResizeEvent& e);
 
         static Application* s_instance;
         ApplicationState m_state;

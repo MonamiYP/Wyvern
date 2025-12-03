@@ -13,6 +13,8 @@ Application::Application(Game* game) {
 
     m_state.window = std::make_unique<Window>(config);
 
+    Renderer::init(config.name.c_str(), m_state.window.get());
+
     m_state.game->init();
     m_state.is_running = true;
 
@@ -20,9 +22,12 @@ Application::Application(Game* game) {
         [this](Event&) -> bool {
             Logger::debug("Close window...");
             m_state.is_running = false;
-            return true;
-        }
-    );
+            return true; });
+
+    m_dispatcher.registerListener<WindowResizeEvent>(
+        [this](Event& e) -> bool {
+            auto& ev = static_cast<WindowResizeEvent&>(e);
+            return onWindowResize(ev); });
 }
 
 void Application::init(Game* game) {
@@ -43,8 +48,12 @@ void Application::run() {
         float dt = Clock::getDeltaTime();
 
         m_state.window->update();
-        m_state.game->update(dt);
-        m_state.game->render(dt);
+        // m_state.game->update(dt);
+        // m_state.game->render(dt);
+
+        RenderPacket renderPacket;
+        renderPacket.deltaTime = dt;
+        Renderer::drawFrame(renderPacket);
 
         double frame_end = Clock::getTimeSinceStart();
         double elapsed = frame_end - frame_start;
@@ -56,4 +65,15 @@ void Application::run() {
             std::this_thread::sleep_for(std::chrono::duration<double>(sleepTime));
         }
     }
+
+    Renderer::shutdown();
+}
+
+bool Application::onWindowResize(WindowResizeEvent& e) {
+    m_state.window_width = e.width;
+    m_state.window_height = e.height;
+
+    Renderer::onWindowResize(e.width, e.height);
+    m_state.game->onWindowResize(e.width, e.height);
+    return true;
 }

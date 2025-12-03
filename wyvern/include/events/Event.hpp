@@ -27,7 +27,7 @@ class EventDispatcher {
         }
 
         void dispatch(Event& event) {
-            Logger::debug("Firing event: %s", typeid(event).name());
+            // Logger::debug("Firing event: %s", typeid(event).name());
             auto it = m_listeners.find(typeid(event));
             if (it != m_listeners.end()) {
                 for (auto& listener : it->second) {

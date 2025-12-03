@@ -2,6 +2,7 @@
 
 #include <cstdarg>
 #include <cstdio>
+#include <stdexcept>
 
 enum LogLevel {
     LOG_LEVEL_FATAL = 0,
@@ -18,6 +19,7 @@ class Logger {
         static void log(LogLevel level, const char* message, ...);
         static void fatal(const char* message, ...);
         static void error(const char* message, ...);
+        static void warn(const char* message, ...);
         static void info(const char* message, ...);
         static void debug(const char* message, ...);
 

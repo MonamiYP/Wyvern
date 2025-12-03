@@ -61,6 +61,12 @@
         "chrono": "cpp",
         "compare": "cpp",
         "concepts": "cpp",
-        "algorithm": "cpp"
+        "algorithm": "cpp",
+        "thread": "cpp",
+        "typeindex": "cpp",
+        "__tree": "cpp",
+        "functional": "cpp",
+        "set": "cpp",
+        "memory_resource": "cpp"
     }
 }

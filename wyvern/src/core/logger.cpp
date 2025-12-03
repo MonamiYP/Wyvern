@@ -28,12 +28,20 @@ void Logger::fatal(const char* message, ...) {
     va_start(args, message);
     output(LogLevel::LOG_LEVEL_FATAL, message, args);
     va_end(args);
+    throw std::runtime_error("Fatal error detected!");
 }
 
 void Logger::error(const char* message, ...) {
     va_list args;
     va_start(args, message);
     output(LogLevel::LOG_LEVEL_ERROR, message, args);
+    va_end(args);
+}
+
+void Logger::warn(const char* message, ...) {
+    va_list args;
+    va_start(args, message);
+    output(LogLevel::LOG_LEVEL_WARNING, message, args);
     va_end(args);
 }
 
