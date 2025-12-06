@@ -3,7 +3,6 @@
 #include "renderer/vulkan/VulkanBackend.hpp"
 
 #include "core/Logger.hpp"
-#include "core/glfw/Window.hpp"
 
 void VulkanSwapchain::create(uint32_t width, uint32_t height, VulkanContext& context) {
     m_context = &context;
@@ -16,6 +15,7 @@ void VulkanSwapchain::create(uint32_t width, uint32_t height, VulkanContext& con
     uint32_t imageCount = swapchainSupport.capabilities.minImageCount + 1;
     if (swapchainSupport.capabilities.maxImageCount > 0 && imageCount > swapchainSupport.capabilities.maxImageCount)
         imageCount = swapchainSupport.capabilities.maxImageCount;
+    m_context->max_frames_in_flight = imageCount - 1;
 
     VkSwapchainCreateInfoKHR create_info = { VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
     create_info.surface = m_context->surface;
@@ -64,16 +64,9 @@ void VulkanSwapchain::create(uint32_t width, uint32_t height, VulkanContext& con
     m_depthAttachment.create(*m_context, VK_IMAGE_TYPE_2D, m_swapChainExtent.width, m_swapChainExtent.height, m_context->device.getDepthFormat(), VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 1, VK_IMAGE_ASPECT_DEPTH_BIT);
 }
 
-void VulkanSwapchain::recreate() {
+void VulkanSwapchain::recreate(uint32_t width, uint32_t height) {
     destroy();
-
-    int w, h;
-    m_context->window->getFramebufferSize(w, h);
-
-    m_context->framebuffer_width = w;
-    m_context->framebuffer_height = h;
-
-    create(w, h, *m_context);
+    create(width, height, *m_context);
 }
 
 void VulkanSwapchain::destroy() {

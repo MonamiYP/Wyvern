@@ -66,6 +66,7 @@ void VulkanCommandBuffer::endSingleUse(VkQueue queue) {
 
     VkSubmitInfo submit_info = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
     submit_info.commandBufferCount = 1;
+    submit_info.pCommandBuffers = &m_commandBuffer;
 
     VkResult result = vkQueueSubmit(queue, 1, &submit_info, 0);
     if (result != VK_SUCCESS) Logger::fatal("Failed to submit single use command buffer");

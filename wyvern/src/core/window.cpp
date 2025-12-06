@@ -39,6 +39,10 @@ void Window::shutdown() {
 void Window::setupCallbacks() {
     glfwSetWindowUserPointer(m_window, this);
 
+    glfwSetKeyCallback(m_window, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
+        Input::processKey(key, action);
+    });
+
     glfwSetWindowSizeCallback(m_window, [](GLFWwindow* window, int width, int height) {
         WindowResizeEvent e(width, height);
         Application::get().getEventDispatcher()->dispatch(e);

@@ -2,10 +2,25 @@
 #include "core/glfw/Window.hpp"
 #include "core/Logger.hpp"
 #include "renderer/vulkan/VulkanBackend.hpp"
+#include "core/Vertex.hpp"
 
 /*
     Vulkan setup functions
 */
+
+void VulkanBackend::uploadDataRange(void* data, VulkanBuffer& buffer, VkDeviceSize size, VkQueue queue) {
+    /*
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT is used for the vertex buffer, which creates a GPU onlu buffer with the most optimal memory type for the graphics card to read from. However, this is not accessible by the CPU
+        So a staging buffer is used in CPU accessible memory to upload data from the vertex array to. Then we copy the data from the staging buffer to the vertex buffer using a buffer copy command.
+    */
+    VkMemoryPropertyFlags flags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+    VkBufferUsageFlags usage_flags = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+    VulkanBuffer staging_buffer;
+    staging_buffer.create(m_context, size, usage_flags, flags);
+    staging_buffer.loadData(data);
+    staging_buffer.copyBufferTo(buffer, queue, size);
+    staging_buffer.destroy();
+}
 
 void VulkanBackend::init(const char* appName, Window* window) {
     m_context.window = window;
@@ -22,11 +37,32 @@ void VulkanBackend::init(const char* appName, Window* window) {
 
     m_context.device.create(m_context);
     m_context.swapchain.create(width, height, m_context);
-    m_context.renderpass.create(m_context, glm::vec2(width, height), glm::vec2(0, 0), glm::vec4(0.6f, 0.2f, 0.05f, 1.0f), 1.0f, 0);
+    m_context.renderpass.create(m_context, glm::vec2(width, height), glm::vec2(0, 0), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), 1.0f, 0);
     m_context.swapchain.regenerateFramebuffers();
 
     createCommandBuffers();
     createSyncObjects();
+
+    std::string path = std::string(SHADER_DIR) + "object";
+    
+    m_context.object_shader.create(m_context, path);
+
+    createBuffers();
+
+    // TODO: Temporary
+    const uint32_t vertex_count = 3;
+    Vertex3D vertices[vertex_count] = {};
+    vertices[0].position.x = 0.0;
+    vertices[0].position.y = -0.5;
+    vertices[1].position.x = 0.5;
+    vertices[1].position.y = 0.5;
+    vertices[2].position.x = -0.5;
+    vertices[2].position.y = 0.5;
+    const uint32_t index_count = 3;
+    uint32_t indices[index_count] = { 0,1,2 };
+
+    uploadDataRange(vertices, m_context.object_vertex_buffer, sizeof(Vertex3D) * vertex_count, m_context.device.getGraphicsQueue());
+    uploadDataRange(indices, m_context.object_index_buffer, sizeof(uint32_t) * index_count, m_context.device.getGraphicsQueue());
 }
 
 void VulkanBackend::createInstance(const char* appName) {
@@ -176,9 +212,23 @@ void VulkanBackend::createSyncObjects() {
     }
 }
 
+void VulkanBackend::createBuffers() {
+    VkMemoryPropertyFlagBits memory_property_flags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT; // This is a GPU only buffer and is the most optimal memory type for graphics cards to read from
+    VkBufferUsageFlags vertex_flags = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+    VkBufferUsageFlags index_flags = VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+
+    const u_int64_t vertex_buffer_size = sizeof(Vertex3D) * 1024 * 1024;
+    m_context.object_vertex_buffer.create(m_context, vertex_buffer_size, vertex_flags, memory_property_flags);
+    m_context.geometry_vertex_offset = 0;
+
+    const u_int64_t index_buffer_size = sizeof(uint32_t) * 1024 * 1024;
+    m_context.object_index_buffer.create(m_context, index_buffer_size, index_flags, memory_property_flags);
+    m_context.geometry_index_offset = 0;
+}
+
 void VulkanBackend::recreateSwapchain() {
     vkDeviceWaitIdle(m_context.device.getLogicalDevice());
-    m_context.swapchain.recreate();
+    m_context.swapchain.recreate(m_context.framebuffer_width, m_context.framebuffer_height);
     m_context.renderpass.setNewSize(m_context.framebuffer_width, m_context.framebuffer_height);
     m_context.swapchain.regenerateFramebuffers();
 
@@ -191,6 +241,10 @@ void VulkanBackend::recreateSwapchain() {
     Vulkan cleanup functions
 */
 void VulkanBackend::shutdown() {
+    m_context.object_vertex_buffer.destroy();
+    m_context.object_index_buffer.destroy();
+    m_context.pipeline.destroy();
+    m_context.object_shader.destroy();
     vkDeviceWaitIdle(m_context.device.getLogicalDevice());
 
     cleanupSyncObjects();
@@ -248,6 +302,31 @@ bool VulkanBackend::beginFrame(float dt) {
     command_buffer->beginRecording();
     m_context.renderpass.begin(command_buffer, m_context.swapchain.getFrameBuffer(m_context.image_index).getHandle());
 
+    // Dynamic state
+    VkViewport viewport;
+    viewport.x = 0.0f;
+    viewport.y = 0.0f;
+    viewport.width = (float) m_context.framebuffer_width;
+    viewport.height = (float) m_context.framebuffer_height;
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+
+    // Scissor
+    VkRect2D scissor;
+    scissor.offset.x = scissor.offset.y = 0;
+    scissor.extent.width = m_context.framebuffer_width;
+    scissor.extent.height = m_context.framebuffer_height;
+
+    // TODO: Temp
+    m_context.object_shader.use();
+    vkCmdSetViewport(command_buffer->getHandle(), 0, 1, &viewport);
+    vkCmdSetScissor(command_buffer->getHandle(), 0, 1, &scissor);
+
+    VkDeviceSize offsets[1] = {0};
+    vkCmdBindVertexBuffers(command_buffer->getHandle(), 0, 1, &m_context.object_vertex_buffer.getHandle(), (VkDeviceSize*)offsets);
+    vkCmdBindIndexBuffer(command_buffer->getHandle(), m_context.object_index_buffer.getHandle(), 0, VK_INDEX_TYPE_UINT32);
+    vkCmdDrawIndexed(command_buffer->getHandle(), 3, 1, 0, 0, 0);
+
     return true;
 }
 
@@ -283,7 +362,13 @@ void VulkanBackend::endFrame(float dt) {
 }
 
 void VulkanBackend::onWindowResize(int width, int height) {
-    m_context.framebuffer_width = width;
-    m_context.framebuffer_height = height;
+    // NOTE: this width and height is different from the framebuffer width and height
+    // The actual pixels on the screen is the framebuffer size
+
+    int w, h;
+    m_context.window->getFramebufferSize(w, h);
+    m_context.framebuffer_width = w;
+    m_context.framebuffer_height = h;
+
     m_context.window_resized = true;
 }

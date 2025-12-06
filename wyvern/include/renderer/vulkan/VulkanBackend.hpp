@@ -9,6 +9,9 @@
 #include "renderer/vulkan/VulkanSwapchain.hpp"
 #include "renderer/vulkan/VulkanRenderpass.hpp"
 #include "renderer/vulkan/VulkanFence.hpp"
+#include "renderer/vulkan/shaders/VulkanObjectShader.hpp"
+#include "renderer/vulkan/VulkanPipeline.hpp"
+#include "renderer/vulkan/VulkanBuffer.hpp"
 
 class Window;
 
@@ -47,9 +50,18 @@ struct VulkanContext {
         This means we also need to duplicate any resource that is accessed and modified during rendering, so things like command buffers, semaphores and fences
         Default is that 2 in flight frames is enough
     */
-    unsigned int max_frames_in_flight = 2;
+    unsigned int max_frames_in_flight;
     unsigned int current_frame = 0;
     unsigned int image_index;
+
+    // Shader stuff
+    VulkanObjectShader object_shader;
+    VulkanPipeline pipeline;
+
+    VulkanBuffer object_vertex_buffer;
+    VulkanBuffer object_index_buffer;
+    uint32_t geometry_vertex_offset;
+    uint32_t geometry_index_offset;
 };
 
 class VulkanBackend {
@@ -61,6 +73,8 @@ class VulkanBackend {
         }
 
         void onWindowResize(int width, int height);
+        
+        void uploadDataRange(void* data, VulkanBuffer& buffer, VkDeviceSize size, VkQueue queue);
 
     private:
         VulkanContext m_context;
@@ -73,6 +87,7 @@ class VulkanBackend {
 
         void createCommandBuffers();
         void createSyncObjects();
+        void createBuffers();
         void recreateSwapchain();
 
         void cleanupSyncObjects();

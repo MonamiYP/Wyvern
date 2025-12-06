@@ -19,15 +19,13 @@ Application::Application(Game* game) {
     m_state.is_running = true;
 
     m_dispatcher.registerListener<WindowCloseEvent>(
-        [this](Event&) -> bool {
-            Logger::debug("Close window...");
-            m_state.is_running = false;
-            return true; });
+        [this](Event&) -> bool { return onWindowClose(); });
 
     m_dispatcher.registerListener<WindowResizeEvent>(
-        [this](Event& e) -> bool {
-            auto& ev = static_cast<WindowResizeEvent&>(e);
-            return onWindowResize(ev); });
+        [this](Event& e) -> bool { return onWindowResize(static_cast<WindowResizeEvent&>(e)); });
+
+    m_dispatcher.registerListener<KeyPressedEvent>(
+        [this](Event& e) -> bool { return onKeyPress(static_cast<KeyPressedEvent&>(e)); });
 }
 
 void Application::init(Game* game) {
@@ -48,8 +46,8 @@ void Application::run() {
         float dt = Clock::getDeltaTime();
 
         m_state.window->update();
-        // m_state.game->update(dt);
-        // m_state.game->render(dt);
+        m_state.game->update(dt);
+        m_state.game->render(dt);
 
         RenderPacket renderPacket;
         renderPacket.deltaTime = dt;
@@ -69,11 +67,26 @@ void Application::run() {
     Renderer::shutdown();
 }
 
+bool Application::onWindowClose() {
+    Logger::debug("Closing window...");
+    m_state.is_running = false;
+    return true;
+}
+
 bool Application::onWindowResize(WindowResizeEvent& e) {
     m_state.window_width = e.width;
     m_state.window_height = e.height;
 
     Renderer::onWindowResize(e.width, e.height);
     m_state.game->onWindowResize(e.width, e.height);
+    return true;
+}
+
+bool Application::onKeyPress(KeyPressedEvent& e) {
+    if (e.key == GLFW_KEY_ESCAPE) {
+        WindowCloseEvent ev;
+        m_dispatcher.dispatch(ev);
+    }
+
     return true;
 }

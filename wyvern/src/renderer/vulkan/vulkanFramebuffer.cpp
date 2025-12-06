@@ -8,7 +8,7 @@ void VulkanFramebuffer::create(VulkanContext& context, uint32_t width, uint32_t 
 
     VkFramebufferCreateInfo framebufferInfo{};
     framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-    framebufferInfo.renderPass = m_context->renderpass.getRenderpassHandle();
+    framebufferInfo.renderPass = m_context->renderpass.getHandle();
     framebufferInfo.attachmentCount = static_cast<uint32_t>(imageViews.size());
     framebufferInfo.pAttachments = imageViews.data();
     framebufferInfo.width = width;

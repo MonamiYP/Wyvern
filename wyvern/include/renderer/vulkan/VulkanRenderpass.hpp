@@ -34,7 +34,7 @@ class VulkanRenderpass {
         void begin(VulkanCommandBuffer* commandBuffer, VkFramebuffer& framebuffer);
         void end(VulkanCommandBuffer* commandBuffer);
 
-        VkRenderPass& getRenderpassHandle() { return m_renderPass; }
+        VkRenderPass& getHandle() { return m_renderPass; }
         void setNewSize(int width, int height) { m_size = glm::vec2(width, height); }
     
     private:

@@ -2,7 +2,11 @@
 
 #include "events/Event.hpp"
 
-struct KeyPressedEvent : Event { int key; };
+struct KeyPressedEvent : Event { 
+    int key; 
+    int action;
+    KeyPressedEvent(int _key, int _action) : key(_key), action(_action) {}
+};
 
 struct WindowResizeEvent : Event { 
     int width, height; 

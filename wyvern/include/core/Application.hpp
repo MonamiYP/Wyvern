@@ -46,7 +46,9 @@ class Application {
     private:
         Application(Game* game);
 
+        bool onWindowClose();
         bool onWindowResize(WindowResizeEvent& e);
+        bool onKeyPress(KeyPressedEvent& e);
 
         static Application* s_instance;
         ApplicationState m_state;

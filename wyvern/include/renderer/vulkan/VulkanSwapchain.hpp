@@ -22,7 +22,7 @@ struct VulkanContext;
 class VulkanSwapchain {
     public:
         void create(uint32_t width, uint32_t height, VulkanContext& context);
-        void recreate();
+        void recreate(uint32_t width, uint32_t height);
         void destroy();
         VkResult acquireNextImageIndex(VkSemaphore image_available_semaphore, uint32_t* out_image_index);
         void present(VkQueue presentQueue, VkSemaphore signalSemaphores, uint32_t imageIndex);
